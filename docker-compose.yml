@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  telegram-monitor:
+    build: .
+    container_name: telegram-monitor
+    restart: unless-stopped
+    environment:
+      # Telegram API 配置 - 请替换为你的实际值
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      
+      # Session 配置
+      - TELEGRAM_SESSION=/app/sessions/telegram_monitor
+      
+      # 监听目标 - 逗号分隔的群组列表
+      - TARGET_CHATS=${TARGET_CHATS}
+      
+      # Webhook URL
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      
+      # 日志级别（可选）
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    
+    volumes:
+      # 持久化 session 文件
+      - ./sessions:/app/sessions
+    
+    # 网络配置
+    network_mode: bridge
+    
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
