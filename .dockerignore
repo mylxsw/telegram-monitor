@@ -6,11 +6,37 @@ docker-compose*
 .git
 .gitignore
 .env
+.env.example
 */bin
 */obj
-README.md
-LICENSE
 .vscode
 build/*
 docker-build.sh
 config.local.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Telegram session files
+*.session
+*.session-journal
+sessions/
+
+# Config files
+config.py
+config.example.py
+
+# Documentation (not needed in container)
+README.md
+LICENSE
+INSTALL.md
+
+# Test files
+test_webhook.py
