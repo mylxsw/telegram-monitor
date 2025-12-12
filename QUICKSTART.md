@@ -1,60 +1,60 @@
-# 快速开始指南
+# Quick Start Guide
 
-## 3 分钟启动服务
+## Start Service in 3 Minutes
 
-### 1️⃣ 安装依赖
+### 1️⃣ Install Dependencies
 
 ```bash
 pip install telethon aiohttp
 ```
 
-### 2️⃣ 获取 Telegram API 凭证
+### 2️⃣ Get Telegram API Credentials
 
-访问 https://my.telegram.org → "API development tools" → 创建应用
+Visit https://my.telegram.org → "API development tools" → Create application
 
-你会得到：
-- `api_id`: 一串数字（例如：12345678）
-- `api_hash`: 一串字母数字（例如：abcdef1234567890abcdef1234567890）
+You will get:
+- `api_id`: A string of numbers (e.g., 12345678)
+- `api_hash`: A string of letters and numbers (e.g., abcdef1234567890abcdef1234567890)
 
-### 3️⃣ 修改配置
+### 3️⃣ Modify Configuration
 
-编辑 `monitor.py` 的第 20-40 行：
+Edit lines 20-40 of `monitor.py`:
 
 ```python
-API_ID = 12345678  # 替换成你的 api_id
-API_HASH = 'abcdef1234567890'  # 替换成你的 api_hash
+API_ID = 12345678  # Replace with your api_id
+API_HASH = 'abcdef1234567890'  # Replace with your api_hash
 
 TARGET_CHATS = [
-    '@your_group_username',  # 替换成你的群组
+    '@your_group_username',  # Replace with your group
 ]
 
-WEBHOOK_URL = 'http://localhost:8080/webhook'  # 替换成你的 API 地址
+WEBHOOK_URL = 'http://localhost:8080/webhook'  # Replace with your API address
 ```
 
-### 4️⃣ 启动服务
+### 4️⃣ Start Service
 
-**终端 1 - 启动测试 webhook (可选):**
+**Terminal 1 - Start test webhook (optional):**
 ```bash
 python test_webhook.py
 ```
 
-**终端 2 - 启动监听服务:**
+**Terminal 2 - Start monitoring service:**
 ```bash
 python monitor.py
 ```
 
-首次运行需要登录：
-1. 输入手机号（带国家码，如 +86）
-2. 输入 Telegram 发送的验证码
-3. 完成！
+First run requires login:
+1. Enter phone number (with country code, e.g., +86)
+2. Enter verification code sent by Telegram
+3. Done!
 
-### 5️⃣ 测试
+### 5️⃣ Test
 
-在你配置的 Telegram 群组中发送一条消息，查看日志输出。
+Send a message in your configured Telegram group and check the log output.
 
 ---
 
-## 使用环境变量（推荐）
+## Using Environment Variables (Recommended)
 
 ```bash
 export TELEGRAM_API_ID=12345678
@@ -67,28 +67,28 @@ python monitor.py
 
 ---
 
-## 获取群组标识
+## Get Group Identifier
 
-### 方法 1: 使用用户名
-如果群组有公开用户名（如 @example_group），直接使用即可。
+### Method 1: Using Username
+If the group has a public username (e.g., @example_group), use it directly.
 
-### 方法 2: 使用 ID
-1. 在群组中添加 [@userinfobot](https://t.me/userinfobot)
-2. 转发群组的任意消息给 bot
-3. Bot 会告诉你群组 ID（例如：-1001234567890）
+### Method 2: Using ID
+1. Add [@userinfobot](https://t.me/userinfobot) to the group
+2. Forward any message from the group to the bot
+3. Bot will tell you the group ID (e.g., -1001234567890)
 
 ---
 
-## 消息格式示例
+## Message Format Example
 
-发送到你的 webhook 的 JSON：
+JSON sent to your webhook:
 
 ```json
 {
   "chat_id": -1001234567890,
-  "chat_name": "示例群组",
+  "chat_name": "Example Group",
   "message_id": 12345,
-  "text": "消息内容",
+  "text": "Message content",
   "date": "2024-01-01T12:00:00+08:00",
   "sender_id": 987654321,
   "sender_name": "@username",
@@ -99,31 +99,31 @@ python monitor.py
 
 ---
 
-## 后台运行（Linux）
+## Background Running (Linux)
 
 ```bash
 nohup python monitor.py > monitor.log 2>&1 &
 ```
 
-查看日志：
+View logs:
 ```bash
 tail -f monitor.log
 ```
 
-停止服务：
+Stop service:
 ```bash
 pkill -f monitor.py
 ```
 
 ---
 
-## Docker 快速启动
+## Docker Quick Start
 
 ```bash
-# 构建镜像
+# Build image
 docker build -t telegram-monitor .
 
-# 首次运行（需要登录）
+# First run (requires login)
 docker run -it --rm \
   -e TELEGRAM_API_ID=12345678 \
   -e TELEGRAM_API_HASH=abcdef1234567890 \
@@ -132,7 +132,7 @@ docker run -it --rm \
   -v $(pwd)/sessions:/app/sessions \
   telegram-monitor
 
-# 后台运行
+# Run in background
 docker run -d --name telegram-monitor \
   -e TELEGRAM_API_ID=12345678 \
   -e TELEGRAM_API_HASH=abcdef1234567890 \
@@ -141,30 +141,30 @@ docker run -d --name telegram-monitor \
   -v $(pwd)/sessions:/app/sessions \
   telegram-monitor
 
-# 查看日志
+# View logs
 docker logs -f telegram-monitor
 ```
 
 ---
 
-## 常见问题
+## FAQ
 
-**Q: 如何停止服务？**  
-A: 按 `Ctrl+C`
+**Q: How to stop the service?**  
+A: Press `Ctrl+C`
 
-**Q: Session 文件丢失了怎么办？**  
-A: 删除旧的 `.session` 文件，重新运行并登录
+**Q: What if Session file is lost?**  
+A: Delete the old `.session` file, run again and log in
 
-**Q: Webhook 调用失败？**  
-A: 检查 WEBHOOK_URL 是否正确，网络是否可达
+**Q: Webhook call failed?**  
+A: Check if WEBHOOK_URL is correct and network is reachable
 
-**Q: 收不到消息？**  
-A: 确认群组标识正确，账号有查看权限
+**Q: Not receiving messages?**  
+A: Confirm group identifier is correct and account has viewing permission
 
 ---
 
-## 需要更多帮助？
+## Need More Help?
 
-- 详细文档：[README.md](README.md)
-- 安装指南：[INSTALL.md](INSTALL.md)
-- 使用示例：[example_usage.md](example_usage.md)
+- Detailed documentation: [README.md](README.md)
+- Installation guide: [INSTALL.md](INSTALL.md)
+- Usage examples: [example_usage.md](example_usage.md)

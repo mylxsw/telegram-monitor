@@ -1,107 +1,107 @@
 # Telegram Monitor Service
 
-一个使用 Python + Telethon 实现的 Telegram 群组/频道消息监听服务。监听指定的 Telegram 群组/频道，并将新消息转发到自定义的 HTTP API。
+A Telegram group/channel message monitoring service implemented using Python + Telethon. It listens to specified Telegram groups/channels and forwards new messages to a custom HTTP API.
 
-## 功能特点
+## Features
 
-- ✅ 使用 Telethon (MTProto) 以用户账号登录，而非 Bot
-- ✅ 支持监听多个群组/频道
-- ✅ 支持 @username 和数字 ID 两种格式的群组标识
-- ✅ 将消息以结构化 JSON 格式 POST 到自定义 Webhook
-- ✅ 完整的消息信息：群组、发送者、文本、时间、媒体等
-- ✅ Session 持久化，无需每次登录
-- ✅ 详细的日志输出，便于监控和调试
-- ✅ 支持环境变量和配置文件两种配置方式
-- ✅ 容错处理，Webhook 失败不影响监听服务
+- ✅ Uses Telethon (MTProto) to log in as a user account, not a Bot
+- ✅ Supports monitoring multiple groups/channels
+- ✅ Supports both @username and numeric ID formats for group identification
+- ✅ Posts messages in structured JSON format to custom Webhooks
+- ✅ Complete message information: group, sender, text, time, media, etc.
+- ✅ Session persistence, no need to log in every time
+- ✅ Detailed log output for easy monitoring and debugging
+- ✅ Supports both environment variables and configuration file methods
+- ✅ Error handling, Webhook failures do not affect the monitoring service
 
-## 快速开始
+## Quick Start
 
-### 1. 安装依赖
+### 1. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-或者单独安装：
+Or install individually:
 
 ```bash
 pip install telethon aiohttp
 ```
 
-### 2. 获取 Telegram API 凭证
+### 2. Get Telegram API Credentials
 
-1. 访问 [https://my.telegram.org](https://my.telegram.org)
-2. 登录你的 Telegram 账号
-3. 进入 "API development tools"
-4. 创建一个应用，获取 `api_id` 和 `api_hash`
+1. Visit [https://my.telegram.org](https://my.telegram.org)
+2. Log in with your Telegram account
+3. Go to "API development tools"
+4. Create an application and obtain `api_id` and `api_hash`
 
-### 3. 配置服务
+### 3. Configure Service
 
-#### 方式一：环境变量（推荐）
+#### Method 1: Environment Variables (Recommended)
 
-复制 `.env.example` 为 `.env` 并修改：
+Copy `.env.example` to `.env` and modify:
 
 ```bash
 cp .env.example .env
-# 编辑 .env 文件，填入你的配置
+# Edit the .env file and fill in your configuration
 ```
 
 ```env
-TELEGRAM_API_ID=你的_API_ID
-TELEGRAM_API_HASH=你的_API_HASH
+TELEGRAM_API_ID=your_API_ID
+TELEGRAM_API_HASH=your_API_HASH
 TARGET_CHATS=@group1,@group2,-1001234567890
 WEBHOOK_URL=http://your-api.com/webhook
 ```
 
-然后使用环境变量运行：
+Then run using environment variables:
 
 ```bash
 export $(cat .env | xargs)
 python monitor.py
 ```
 
-#### 方式二：直接修改代码
+#### Method 2: Direct Code Modification
 
-编辑 `monitor.py` 文件，修改配置部分：
+Edit the `monitor.py` file and modify the configuration section:
 
 ```python
-# Telegram API 凭证
-API_ID = 12345678  # 替换为你的 API ID
-API_HASH = 'your_api_hash_here'  # 替换为你的 API Hash
+# Telegram API credentials
+API_ID = 12345678  # Replace with your API ID
+API_HASH = 'your_api_hash_here'  # Replace with your API Hash
 
-# 要监听的群组/频道列表
+# List of groups/channels to monitor
 TARGET_CHATS = [
-    '@example_group',  # 群组用户名
-    -1001234567890,    # 群组 ID
+    '@example_group',  # Group username
+    -1001234567890,    # Group ID
 ]
 
 # Webhook URL
 WEBHOOK_URL = 'http://your-api.com/webhook'
 ```
 
-### 4. 运行服务
+### 4. Run Service
 
 ```bash
 python monitor.py
 ```
 
-**首次运行**时，程序会提示你输入：
-1. 手机号码（包含国家代码，如 +86）
-2. 验证码（Telegram 会发送到你的手机）
-3. 如果启用了两步验证，还需要输入密码
+**On first run**, the program will prompt you to enter:
+1. Phone number (including country code, e.g., +86)
+2. Verification code (Telegram will send to your phone)
+3. Password (if two-step verification is enabled)
 
-完成后会生成 `telegram_monitor.session` 文件，后续运行会自动使用该 session，无需重新登录。
+After completion, a `telegram_monitor.session` file will be generated. Subsequent runs will automatically use this session without re-login.
 
-## 消息格式
+## Message Format
 
-发送到 Webhook 的 JSON 格式：
+JSON format sent to Webhook:
 
 ```json
 {
   "chat_id": -1001234567890,
-  "chat_name": "示例群组",
+  "chat_name": "Example Group",
   "message_id": 12345,
-  "text": "消息文本内容",
+  "text": "Message text content",
   "date": "2024-01-01T12:00:00+08:00",
   "sender_id": 987654321,
   "sender_name": "@username",
@@ -110,76 +110,76 @@ python monitor.py
 }
 ```
 
-字段说明：
+Field Description:
 
-| 字段 | 类型 | 说明 |
+| Field | Type | Description |
 |------|------|------|
-| `chat_id` | int | 群组/频道 ID |
-| `chat_name` | string | 群组/频道名称 |
-| `message_id` | int | 消息 ID |
-| `text` | string | 消息文本内容（纯文本，无则为空字符串） |
-| `date` | string | 消息发送时间（ISO8601 格式） |
-| `sender_id` | int | 发送者 ID |
-| `sender_name` | string | 发送者名称（优先 username，否则为姓名） |
-| `media` | boolean | 是否包含媒体（图片、视频、文件等） |
-| `ts` | int | 当前时间戳（Unix timestamp） |
+| `chat_id` | int | Group/Channel ID |
+| `chat_name` | string | Group/Channel name |
+| `message_id` | int | Message ID |
+| `text` | string | Message text content (plain text, empty string if none) |
+| `date` | string | Message send time (ISO8601 format) |
+| `sender_id` | int | Sender ID |
+| `sender_name` | string | Sender name (username preferred, otherwise full name) |
+| `media` | boolean | Whether contains media (images, videos, files, etc.) |
+| `ts` | int | Current timestamp (Unix timestamp) |
 
-## 日志输出
+## Log Output
 
-服务运行时会输出详细的日志信息：
+The service outputs detailed log information when running:
 
 ```
 2024-01-01 12:00:00 - __main__ - INFO - ============================================================
-2024-01-01 12:00:00 - __main__ - INFO - Telegram Monitor Service 启动中...
+2024-01-01 12:00:00 - __main__ - INFO - Telegram Monitor Service starting...
 2024-01-01 12:00:00 - __main__ - INFO - ============================================================
-2024-01-01 12:00:00 - __main__ - INFO - 配置信息:
+2024-01-01 12:00:00 - __main__ - INFO - Configuration:
 2024-01-01 12:00:00 - __main__ - INFO -   API ID: 12345678
 2024-01-01 12:00:00 - __main__ - INFO -   Session: telegram_monitor.session
 2024-01-01 12:00:00 - __main__ - INFO -   Webhook URL: http://your-api.com/webhook
-2024-01-01 12:00:00 - __main__ - INFO -   监听目标数: 2
+2024-01-01 12:00:00 - __main__ - INFO -   Target count: 2
 2024-01-01 12:00:00 - __main__ - INFO - ------------------------------------------------------------
-2024-01-01 12:00:00 - __main__ - INFO - 正在连接到 Telegram...
-2024-01-01 12:00:01 - __main__ - INFO - ✓ 已成功连接到 Telegram
-2024-01-01 12:00:01 - __main__ - INFO - ✓ 已登录为: @your_username (ID: 123456789)
-2024-01-01 12:00:01 - __main__ - INFO - 正在初始化目标群组列表...
-2024-01-01 12:00:01 - __main__ - INFO -   ✓ 已添加监听目标: 示例群组 (ID: -1001234567890)
-2024-01-01 12:00:01 - __main__ - INFO - ✓ 共初始化 1 个监听目标
+2024-01-01 12:00:00 - __main__ - INFO - Connecting to Telegram...
+2024-01-01 12:00:01 - __main__ - INFO - ✓ Successfully connected to Telegram
+2024-01-01 12:00:01 - __main__ - INFO - ✓ Logged in as: @your_username (ID: 123456789)
+2024-01-01 12:00:01 - __main__ - INFO - Initializing target group list...
+2024-01-01 12:00:01 - __main__ - INFO -   ✓ Added monitoring target: Example Group (ID: -1001234567890)
+2024-01-01 12:00:01 - __main__ - INFO - ✓ Initialized 1 monitoring target(s)
 2024-01-01 12:00:01 - __main__ - INFO - ============================================================
-2024-01-01 12:00:01 - __main__ - INFO - ✓ 服务已启动，正在监听新消息...
-2024-01-01 12:00:01 - __main__ - INFO -   按 Ctrl+C 停止服务
+2024-01-01 12:00:01 - __main__ - INFO - ✓ Service started, listening for new messages...
+2024-01-01 12:00:01 - __main__ - INFO -   Press Ctrl+C to stop the service
 2024-01-01 12:00:01 - __main__ - INFO - ============================================================
-2024-01-01 12:05:30 - __main__ - INFO - 📨 收到消息 | 群组: 示例群组 | 发送者: @user1 | 文本: Hello World
-2024-01-01 12:05:30 - __main__ - INFO - ✓ 消息已发送到 webhook (状态码: 200)
+2024-01-01 12:05:30 - __main__ - INFO - 📨 Received message | Group: Example Group | Sender: @user1 | Text: Hello World
+2024-01-01 12:05:30 - __main__ - INFO - ✓ Message sent to webhook (status code: 200)
 ```
 
-## 高级配置
+## Advanced Configuration
 
-### 调整日志级别
+### Adjust Log Level
 
 ```bash
-export LOG_LEVEL=DEBUG  # 可选: DEBUG, INFO, WARNING, ERROR
+export LOG_LEVEL=DEBUG  # Options: DEBUG, INFO, WARNING, ERROR
 python monitor.py
 ```
 
-### 使用不同的 Session 文件
+### Use Different Session File
 
 ```bash
 export TELEGRAM_SESSION=my_custom_session
 python monitor.py
 ```
 
-### 获取群组 ID
+### Get Group ID
 
-如果你不知道群组的数字 ID，可以：
+If you don't know the numeric ID of a group, you can:
 
-1. 使用 Telegram 官方应用，在群组设置中查看
-2. 或者使用以下临时脚本：
+1. Use the official Telegram app and check in group settings
+2. Or use the following temporary script:
 
 ```python
 from telethon.sync import TelegramClient
 
-API_ID = 你的_API_ID
-API_HASH = '你的_API_HASH'
+API_ID = your_API_ID
+API_HASH = 'your_API_HASH'
 
 with TelegramClient('temp_session', API_ID, API_HASH) as client:
     for dialog in client.iter_dialogs():
@@ -187,92 +187,92 @@ with TelegramClient('temp_session', API_ID, API_HASH) as client:
             print(f"{dialog.name}: {dialog.id}")
 ```
 
-## Docker 部署
+## Docker Deployment
 
-### 构建镜像
+### Build Image
 
 ```bash
 docker build -t telegram-monitor .
 ```
 
-### 运行容器
+### Run Container
 
 ```bash
 docker run -d \
   --name telegram-monitor \
-  -e TELEGRAM_API_ID=你的_API_ID \
-  -e TELEGRAM_API_HASH=你的_API_HASH \
+  -e TELEGRAM_API_ID=your_API_ID \
+  -e TELEGRAM_API_HASH=your_API_HASH \
   -e TARGET_CHATS=@group1,-1001234567890 \
   -e WEBHOOK_URL=http://your-api.com/webhook \
   -v $(pwd)/sessions:/app/sessions \
   telegram-monitor
 ```
 
-注意：首次运行需要交互式登录：
+Note: First run requires interactive login:
 
 ```bash
 docker run -it \
   --name telegram-monitor \
-  -e TELEGRAM_API_ID=你的_API_ID \
-  -e TELEGRAM_API_HASH=你的_API_HASH \
+  -e TELEGRAM_API_ID=your_API_ID \
+  -e TELEGRAM_API_HASH=your_API_HASH \
   -e TARGET_CHATS=@group1,-1001234567890 \
   -e WEBHOOK_URL=http://your-api.com/webhook \
   -v $(pwd)/sessions:/app/sessions \
   telegram-monitor
 ```
 
-## 常见问题
+## FAQ
 
-### 1. 如何获取群组的 ID？
+### 1. How to get Group ID?
 
-- 转发群组的任意消息给 [@userinfobot](https://t.me/userinfobot)
-- 或在群组中使用 [@RawDataBot](https://t.me/RawDataBot) 查看完整信息
-- 使用上面提供的临时脚本列出所有群组
+- Forward any message from the group to [@userinfobot](https://t.me/userinfobot)
+- Or use [@RawDataBot](https://t.me/RawDataBot) in the group to view complete information
+- Use the temporary script provided above to list all groups
 
-### 2. Session 文件丢失怎么办？
+### 2. What if Session file is lost?
 
-删除旧的 `.session` 文件，重新运行程序进行登录验证。
+Delete the old `.session` file and run the program again to perform login verification.
 
-### 3. Webhook 调用失败
+### 3. Webhook call failed
 
-检查以下几点：
-- Webhook URL 是否正确且可访问
-- 网络连接是否正常
-- 查看服务日志中的错误信息
+Check the following:
+- Is the Webhook URL correct and accessible?
+- Is the network connection normal?
+- Check error messages in service logs
 
-### 4. 无法连接到 Telegram
+### 4. Cannot connect to Telegram
 
-- 检查网络连接
-- 如果在国内，可能需要配置代理
-- 确认 API_ID 和 API_HASH 正确
+- Check network connection
+- If in China, you may need to configure a proxy
+- Confirm API_ID and API_HASH are correct
 
-### 5. 消息接收不完整
+### 5. Incomplete message reception
 
-- 确保账号有权限查看群组消息
-- 某些私密群组可能有限制
-- 检查 TARGET_CHATS 配置是否正确
+- Ensure the account has permission to view group messages
+- Some private groups may have restrictions
+- Check if TARGET_CHATS configuration is correct
 
-## 注意事项
+## Important Notes
 
-1. **隐私和安全**：
-   - Session 文件包含你的登录凭证，请妥善保管
-   - 不要将 Session 文件提交到代码库
-   - 建议使用环境变量管理敏感配置
+1. **Privacy and Security**:
+   - Session file contains your login credentials, keep it safe
+   - Do not commit Session file to code repository
+   - Recommended to use environment variables to manage sensitive configuration
 
-2. **使用限制**：
-   - 遵守 Telegram 的使用条款
-   - 避免频繁操作导致账号受限
-   - 不要用于垃圾信息或非法用途
+2. **Usage Restrictions**:
+   - Follow Telegram's Terms of Service
+   - Avoid frequent operations that may cause account restrictions
+   - Do not use for spam or illegal purposes
 
-3. **稳定性**：
-   - 建议使用 supervisor、systemd 或 Docker 保持服务运行
-   - 定期检查日志，确保服务正常
+3. **Stability**:
+   - Recommended to use supervisor, systemd, or Docker to keep the service running
+   - Regularly check logs to ensure the service is operating normally
 
-## 系统服务部署（Linux）
+## System Service Deployment (Linux)
 
-### 使用 systemd
+### Using systemd
 
-创建服务文件 `/etc/systemd/system/telegram-monitor.service`：
+Create service file `/etc/systemd/system/telegram-monitor.service`:
 
 ```ini
 [Unit]
@@ -283,8 +283,8 @@ After=network.target
 Type=simple
 User=your_user
 WorkingDirectory=/path/to/telegram-monitor
-Environment="TELEGRAM_API_ID=你的_API_ID"
-Environment="TELEGRAM_API_HASH=你的_API_HASH"
+Environment="TELEGRAM_API_ID=your_API_ID"
+Environment="TELEGRAM_API_HASH=your_API_HASH"
 Environment="TARGET_CHATS=@group1,-1001234567890"
 Environment="WEBHOOK_URL=http://your-api.com/webhook"
 ExecStart=/usr/bin/python3 /path/to/telegram-monitor/monitor.py
@@ -295,7 +295,7 @@ RestartSec=10
 WantedBy=multi-user.target
 ```
 
-启动服务：
+Start service:
 
 ```bash
 sudo systemctl daemon-reload
@@ -304,20 +304,20 @@ sudo systemctl start telegram-monitor
 sudo systemctl status telegram-monitor
 ```
 
-查看日志：
+View logs:
 
 ```bash
 sudo journalctl -u telegram-monitor -f
 ```
 
-## 许可证
+## License
 
 MIT License
 
-## 贡献
+## Contributing
 
-欢迎提交 Issue 和 Pull Request！
+Issues and Pull Requests are welcome!
 
-## 支持
+## Support
 
-如有问题，请在 GitHub Issues 中提出。
+If you have any questions, please submit them in GitHub Issues.
