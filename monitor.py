@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 Telegram Monitor Service
-监听指定的 Telegram 群组/频道，将新消息转发到 HTTP API
+Listens to specified Telegram groups/channels and forwards new messages to HTTP API
 
-使用 Telethon 库以用户账号登录 Telegram，监听指定群组的消息
+Uses Telethon library to log in to Telegram as a user account and monitor messages from specified groups
 """
 
 import os
@@ -19,38 +19,38 @@ from telethon import TelegramClient, events
 from telethon.tl.types import User, Channel, Chat
 
 # ============================================================================
-# 配置部分 - 请根据实际情况修改这些配置
+# Configuration Section - Modify these settings according to your needs
 # ============================================================================
 
-# Telegram API 凭证 (从 https://my.telegram.org 获取)
-API_ID = os.getenv('TELEGRAM_API_ID', '你的_API_ID')  # 必须替换
-API_HASH = os.getenv('TELEGRAM_API_HASH', '你的_API_HASH')  # 必须替换
+# Telegram API credentials (get from https://my.telegram.org)
+API_ID = os.getenv('TELEGRAM_API_ID', 'your_API_ID')  # Must replace
+API_HASH = os.getenv('TELEGRAM_API_HASH', 'your_API_HASH')  # Must replace
 
-# Session 文件名 (用于保存登录状态)
+# Session file name (used to save login state)
 SESSION_NAME = os.getenv('TELEGRAM_SESSION', 'telegram_monitor')
 
-# 要监听的群组/频道列表
-# 支持格式：
-# - @username 形式 (如 '@example_group')
-# - 数字 ID 形式 (如 -1001234567890)
+# List of groups/channels to monitor
+# Supported formats:
+# - @username format (e.g., '@example_group')
+# - Numeric ID format (e.g., -1001234567890)
 TARGET_CHATS_STR = os.getenv('TARGET_CHATS', '')
 if TARGET_CHATS_STR:
     TARGET_CHATS = [chat.strip() for chat in TARGET_CHATS_STR.split(',') if chat.strip()]
 else:
-    # 默认配置示例 - 请替换为你要监听的群组
+    # Default configuration example - replace with groups you want to monitor
     TARGET_CHATS = [
         # '@example_group',
         # -1001234567890,
     ]
 
-# Webhook URL - 接收消息的 HTTP 接口地址
-WEBHOOK_URL = os.getenv('WEBHOOK_URL', 'http://localhost:8080/webhook')  # 必须替换
+# Webhook URL - HTTP interface address to receive messages
+WEBHOOK_URL = os.getenv('WEBHOOK_URL', 'http://localhost:8080/webhook')  # Must replace
 
-# 日志级别
+# Log level
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
 # ============================================================================
-# 日志配置
+# Logging Configuration
 # ============================================================================
 
 logging.basicConfig(
@@ -63,24 +63,24 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ============================================================================
-# 全局变量
+# Global Variables
 # ============================================================================
 
-# 存储目标群组的 ID 和名称映射
+# Store target group ID and name mapping
 target_chat_ids = set()
 chat_info_cache = {}
 
 
 # ============================================================================
-# 辅助函数
+# Helper Functions
 # ============================================================================
 
 async def send_to_webhook(data: Dict[str, Any]) -> None:
     """
-    将消息数据发送到 Webhook URL
+    Send message data to Webhook URL
     
     Args:
-        data: 要发送的消息数据字典
+        data: Message data dictionary to send
     """
     try:
         async with aiohttp.ClientSession() as session:
@@ -92,41 +92,41 @@ async def send_to_webhook(data: Dict[str, Any]) -> None:
             ) as response:
                 status = response.status
                 if status == 200:
-                    logger.info(f"✓ 消息已发送到 webhook (状态码: {status})")
+                    logger.info(f"✓ Message sent to webhook (status code: {status})")
                 else:
                     response_text = await response.text()
                     logger.warning(
-                        f"⚠ Webhook 返回非 200 状态码: {status}, "
-                        f"响应: {response_text[:200]}"
+                        f"⚠ Webhook returned non-200 status code: {status}, "
+                        f"Response: {response_text[:200]}"
                     )
     except asyncio.TimeoutError:
-        logger.error(f"✗ 发送到 webhook 超时: {WEBHOOK_URL}")
+        logger.error(f"✗ Sending to webhook timed out: {WEBHOOK_URL}")
     except aiohttp.ClientError as e:
-        logger.error(f"✗ 发送到 webhook 失败 (网络错误): {e}")
+        logger.error(f"✗ Failed to send to webhook (network error): {e}")
     except Exception as e:
-        logger.error(f"✗ 发送到 webhook 失败 (未知错误): {e}")
+        logger.error(f"✗ Failed to send to webhook (unknown error): {e}")
 
 
 def get_sender_name(sender) -> str:
     """
-    获取发送者的名称
+    Get sender's name
     
-    优先级: username > first_name + last_name > id
+    Priority: username > first_name + last_name > id
     
     Args:
-        sender: Telegram 发送者对象
+        sender: Telegram sender object
         
     Returns:
-        发送者名称字符串
+        Sender name string
     """
     if not sender:
         return "Unknown"
     
-    # 优先使用 username
+    # Prioritize username
     if hasattr(sender, 'username') and sender.username:
         return f"@{sender.username}"
     
-    # 其次使用姓名
+    # Then use full name
     if isinstance(sender, User):
         name_parts = []
         if hasattr(sender, 'first_name') and sender.first_name:
@@ -136,7 +136,7 @@ def get_sender_name(sender) -> str:
         if name_parts:
             return ' '.join(name_parts)
     
-    # 最后使用 ID
+    # Finally use ID
     if hasattr(sender, 'id'):
         return f"User_{sender.id}"
     
@@ -145,27 +145,27 @@ def get_sender_name(sender) -> str:
 
 def get_chat_name(chat) -> str:
     """
-    获取聊天的名称
+    Get chat name
     
     Args:
-        chat: Telegram 聊天对象
+        chat: Telegram chat object
         
     Returns:
-        聊天名称字符串
+        Chat name string
     """
     if not chat:
         return "Unknown Chat"
     
-    # 频道或群组
+    # Channel or group
     if isinstance(chat, (Channel, Chat)):
         if hasattr(chat, 'title') and chat.title:
             return chat.title
     
-    # 用户
+    # User
     if isinstance(chat, User):
         return get_sender_name(chat)
     
-    # 使用 ID
+    # Use ID
     if hasattr(chat, 'id'):
         return f"Chat_{chat.id}"
     
@@ -174,27 +174,27 @@ def get_chat_name(chat) -> str:
 
 async def build_message_data(event) -> Dict[str, Any]:
     """
-    从事件中构建消息数据结构
+    Build message data structure from event
     
     Args:
-        event: Telethon 消息事件
+        event: Telethon message event
         
     Returns:
-        包含消息信息的字典
+        Dictionary containing message information
     """
     message = event.message
     
-    # 获取发送者信息
+    # Get sender information
     sender = await event.get_sender()
     sender_id = sender.id if sender else 0
     sender_name = get_sender_name(sender)
     
-    # 获取聊天信息
+    # Get chat information
     chat = await event.get_chat()
     chat_id = event.chat_id
     chat_name = chat_info_cache.get(chat_id, get_chat_name(chat))
     
-    # 构建消息数据
+    # Build message data
     data = {
         "chat_id": chat_id,
         "chat_name": chat_name,
@@ -211,155 +211,155 @@ async def build_message_data(event) -> Dict[str, Any]:
 
 
 # ============================================================================
-# Telegram 客户端和事件处理
+# Telegram Client and Event Handling
 # ============================================================================
 
 async def init_target_chats(client: TelegramClient) -> None:
     """
-    初始化目标群组列表，解析并获取群组实体
+    Initialize target group list, parse and get group entities
     
     Args:
-        client: Telegram 客户端实例
+        client: Telegram client instance
     """
     global target_chat_ids, chat_info_cache
     
-    logger.info("正在初始化目标群组列表...")
+    logger.info("Initializing target group list...")
     
     for chat_identifier in TARGET_CHATS:
         try:
-            # 获取群组实体
+            # Get group entity
             entity = await client.get_entity(chat_identifier)
             chat_id = entity.id
             target_chat_ids.add(chat_id)
             
-            # 缓存群组信息
+            # Cache group information
             chat_name = get_chat_name(entity)
             chat_info_cache[chat_id] = chat_name
             
-            logger.info(f"  ✓ 已添加监听目标: {chat_name} (ID: {chat_id})")
+            logger.info(f"  ✓ Added monitoring target: {chat_name} (ID: {chat_id})")
             
         except ValueError as e:
-            logger.error(f"  ✗ 无法找到群组: {chat_identifier} - {e}")
+            logger.error(f"  ✗ Cannot find group: {chat_identifier} - {e}")
         except Exception as e:
-            logger.error(f"  ✗ 获取群组信息失败: {chat_identifier} - {e}")
+            logger.error(f"  ✗ Failed to get group information: {chat_identifier} - {e}")
     
     if not target_chat_ids:
-        logger.error("⚠ 警告: 没有有效的监听目标！请检查 TARGET_CHATS 配置")
+        logger.error("⚠ Warning: No valid monitoring targets! Please check TARGET_CHATS configuration")
     else:
-        logger.info(f"✓ 共初始化 {len(target_chat_ids)} 个监听目标")
+        logger.info(f"✓ Initialized {len(target_chat_ids)} monitoring target(s)")
 
 
 async def message_handler(event):
     """
-    处理新消息事件
+    Handle new message events
     
     Args:
-        event: Telethon 新消息事件
+        event: Telethon new message event
     """
     try:
         chat_id = event.chat_id
         
-        # 只处理目标群组的消息
+        # Only process messages from target groups
         if chat_id not in target_chat_ids:
             return
         
         message = event.message
         chat_name = chat_info_cache.get(chat_id, "Unknown")
         
-        # 构建消息数据
+        # Build message data
         data = await build_message_data(event)
         
-        # 打印简要信息
+        # Print brief information
         logger.info(
-            f"📨 收到消息 | 群组: {chat_name} | "
-            f"发送者: {data['sender_name']} | "
-            f"文本: {data['text'][:50]}{'...' if len(data['text']) > 50 else ''}"
+            f"📨 Received message | Group: {chat_name} | "
+            f"Sender: {data['sender_name']} | "
+            f"Text: {data['text'][:50]}{'...' if len(data['text']) > 50 else ''}"
         )
         
-        # 发送到 webhook
+        # Send to webhook
         await send_to_webhook(data)
         
     except Exception as e:
-        logger.error(f"处理消息时出错: {e}", exc_info=True)
+        logger.error(f"Error processing message: {e}", exc_info=True)
 
 
 # ============================================================================
-# 主程序
+# Main Program
 # ============================================================================
 
 async def main():
     """
-    主函数 - 初始化客户端并开始监听
+    Main function - Initialize client and start monitoring
     """
     logger.info("=" * 60)
-    logger.info("Telegram Monitor Service 启动中...")
+    logger.info("Telegram Monitor Service starting...")
     logger.info("=" * 60)
     
-    # 验证配置
-    if API_ID == '你的_API_ID' or API_HASH == '你的_API_HASH':
-        logger.error("✗ 错误: 请先配置 API_ID 和 API_HASH！")
-        logger.error("  从 https://my.telegram.org 获取你的 API 凭证")
+    # Validate configuration
+    if API_ID == 'your_API_ID' or API_HASH == 'your_API_HASH':
+        logger.error("✗ Error: Please configure API_ID and API_HASH first!")
+        logger.error("  Get your API credentials from https://my.telegram.org")
         sys.exit(1)
     
     if not TARGET_CHATS:
-        logger.error("✗ 错误: 请配置至少一个要监听的群组 (TARGET_CHATS)！")
+        logger.error("✗ Error: Please configure at least one group to monitor (TARGET_CHATS)!")
         sys.exit(1)
     
     if WEBHOOK_URL == 'http://localhost:8080/webhook':
-        logger.warning("⚠ 警告: 使用默认的 WEBHOOK_URL，请确保这是你想要的")
+        logger.warning("⚠ Warning: Using default WEBHOOK_URL, please ensure this is what you want")
     
-    logger.info(f"配置信息:")
+    logger.info(f"Configuration:")
     logger.info(f"  API ID: {API_ID}")
     logger.info(f"  Session: {SESSION_NAME}.session")
     logger.info(f"  Webhook URL: {WEBHOOK_URL}")
-    logger.info(f"  监听目标数: {len(TARGET_CHATS)}")
+    logger.info(f"  Target count: {len(TARGET_CHATS)}")
     logger.info("-" * 60)
     
-    # 创建 Telegram 客户端
+    # Create Telegram client
     client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
     
     try:
-        # 启动客户端
-        logger.info("正在连接到 Telegram...")
+        # Start client
+        logger.info("Connecting to Telegram...")
         await client.start()
-        logger.info("✓ 已成功连接到 Telegram")
+        logger.info("✓ Successfully connected to Telegram")
         
-        # 获取当前用户信息
+        # Get current user information
         me = await client.get_me()
-        logger.info(f"✓ 已登录为: {get_sender_name(me)} (ID: {me.id})")
+        logger.info(f"✓ Logged in as: {get_sender_name(me)} (ID: {me.id})")
         
-        # 初始化目标群组
+        # Initialize target groups
         await init_target_chats(client)
         
-        # 注册新消息事件处理器
+        # Register new message event handler
         client.add_event_handler(
             message_handler,
             events.NewMessage()
         )
         
         logger.info("=" * 60)
-        logger.info("✓ 服务已启动，正在监听新消息...")
-        logger.info("  按 Ctrl+C 停止服务")
+        logger.info("✓ Service started, listening for new messages...")
+        logger.info("  Press Ctrl+C to stop the service")
         logger.info("=" * 60)
         
-        # 保持运行
+        # Keep running
         await client.run_until_disconnected()
         
     except KeyboardInterrupt:
-        logger.info("\n收到中断信号，正在停止服务...")
+        logger.info("\nReceived interrupt signal, stopping service...")
     except Exception as e:
-        logger.error(f"✗ 运行时错误: {e}", exc_info=True)
+        logger.error(f"✗ Runtime error: {e}", exc_info=True)
     finally:
         if client.is_connected():
             await client.disconnect()
-            logger.info("✓ 已断开连接")
+            logger.info("✓ Disconnected")
 
 
 if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logger.info("\n服务已停止")
+        logger.info("\nService stopped")
     except Exception as e:
-        logger.error(f"程序异常退出: {e}", exc_info=True)
+        logger.error(f"Program exited abnormally: {e}", exc_info=True)
         sys.exit(1)

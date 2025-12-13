@@ -1,28 +1,28 @@
 # -*- coding: utf-8 -*-
 """
-配置文件示例
-复制此文件为 config.py 并填入你的实际配置
+Configuration File Example
+Copy this file as config.py and fill in your actual configuration
 
-注意：config.py 文件已被添加到 .gitignore，不会被提交到代码库
+Note: config.py file has been added to .gitignore and will not be committed to the repository
 """
 
 # ============================================================================
-# Telegram API 凭证
-# 从 https://my.telegram.org 获取
+# Telegram API Credentials
+# Get from https://my.telegram.org
 # ============================================================================
-API_ID = 12345678  # 替换为你的 API ID
-API_HASH = 'your_api_hash_here'  # 替换为你的 API Hash
+API_ID = 12345678  # Replace with your API ID
+API_HASH = 'your_api_hash_here'  # Replace with your API Hash
 
 # ============================================================================
-# Session 文件配置
+# Session File Configuration
 # ============================================================================
-SESSION_NAME = 'telegram_monitor'  # Session 文件名
+SESSION_NAME = 'telegram_monitor'  # Session file name
 
 # ============================================================================
-# 要监听的群组/频道列表
-# 支持以下格式：
-# - '@username' 形式（如 '@example_group'）
-# - 数字 ID 形式（如 -1001234567890）
+# List of Groups/Channels to Monitor
+# Supports the following formats:
+# - '@username' format (e.g., '@example_group')
+# - Numeric ID format (e.g., -1001234567890)
 # ============================================================================
 TARGET_CHATS = [
     '@example_group',
@@ -31,11 +31,11 @@ TARGET_CHATS = [
 ]
 
 # ============================================================================
-# Webhook 配置
+# Webhook Configuration
 # ============================================================================
-WEBHOOK_URL = 'http://localhost:8080/webhook'  # 替换为你的 webhook 地址
+WEBHOOK_URL = 'http://localhost:8080/webhook'  # Replace with your webhook address
 
 # ============================================================================
-# 日志配置
+# Logging Configuration
 # ============================================================================
-LOG_LEVEL = 'INFO'  # 可选值: DEBUG, INFO, WARNING, ERROR
+LOG_LEVEL = 'INFO'  # Options: DEBUG, INFO, WARNING, ERROR
